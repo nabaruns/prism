@@ -107,6 +107,7 @@ http.route({
     const teamId = form.get("team_id") ?? "";
     const slackUserId = form.get("user_id") ?? "";
     const responseUrl = form.get("response_url") ?? "";
+    const channelId = form.get("channel_id") ?? "";
     const text = (form.get("text") ?? "").trim();
     const [cmdRaw, ...rest] = text.split(/\s+/);
     const cmd = cmdRaw.toLowerCase();
@@ -139,7 +140,7 @@ http.route({
       } else if (!/^https?:\/\//i.test(text) && !/^[\w-]+(\.[\w-]+)+/.test(text)) {
         return slackReply("Didn't get that — try `/prism help`");
       }
-      await ctx.runMutation(internal.sources.addForUserSlack, { userId, url, lens: lens as any, responseUrl });
+      await ctx.runMutation(internal.sources.addForUserSlack, { userId, url, lens: lens as any, responseUrl, channelId });
       return slackReply(`:mag: Running *${lens}* on *${url}*… result posts here in a moment.`, true);
     } catch (e: any) {
       return slackReply(`:warning: ${String(e?.message ?? e)}`);

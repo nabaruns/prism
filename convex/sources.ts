@@ -47,6 +47,7 @@ export async function insertSource(
   lens: string,
   telegramChatId?: number,
   slackResponseUrl?: string,
+  slackChannelId?: string,
 ): Promise<Id<"sources">> {
   const norm = normalizeUrl(url);
   const id = await ctx.db.insert("sources", {
@@ -57,6 +58,7 @@ export async function insertSource(
     status: "pending",
     ...(telegramChatId !== undefined ? { telegramChatId } : {}),
     ...(slackResponseUrl !== undefined ? { slackResponseUrl } : {}),
+    ...(slackChannelId !== undefined ? { slackChannelId } : {}),
     createdAt: Date.now(),
   });
   await ctx.scheduler.runAfter(0, internal.sources.runLens, { sourceId: id });
@@ -83,9 +85,9 @@ export const addForUser = internalMutation({
 
 // From the Slack slash command (reply goes to the slash command's response_url).
 export const addForUserSlack = internalMutation({
-  args: { userId: v.id("users"), url: v.string(), lens: LENS, responseUrl: v.string() },
-  handler: async (ctx, { userId, url, lens, responseUrl }) => {
-    return await insertSource(ctx, userId, url, lens, undefined, responseUrl);
+  args: { userId: v.id("users"), url: v.string(), lens: LENS, responseUrl: v.string(), channelId: v.optional(v.string()) },
+  handler: async (ctx, { userId, url, lens, responseUrl, channelId }) => {
+    return await insertSource(ctx, userId, url, lens, undefined, responseUrl, channelId);
   },
 });
 
@@ -260,6 +262,11 @@ export const runLens = internalAction({
           if (source.userId) {
             await ctx.scheduler.runAfter(0, internal.telegram.notifyUserChange, {
               userId: source.userId, domain: source.domain, lens, summary, whyItMatters,
+            });
+          }
+          if (source.slackChannelId) {
+            await ctx.scheduler.runAfter(0, internal.slack.notifyChange, {
+              channelId: source.slackChannelId, domain: source.domain, lens, summary, whyItMatters,
             });
           }
         }

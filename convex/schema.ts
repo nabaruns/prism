@@ -30,6 +30,7 @@ export default defineSchema({
     error: v.optional(v.string()),
     telegramChatId: v.optional(v.number()), // chat that requested this source (push result back)
     slackResponseUrl: v.optional(v.string()), // Slack slash-command response_url to reply to
+    slackChannelId: v.optional(v.string()), // Slack channel to post later change alerts to
     createdAt: v.number(),
   })
     .index("by_created", ["createdAt"])

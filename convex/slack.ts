@@ -60,6 +60,18 @@ async function postToResponseUrl(responseUrl: string, text: string): Promise<voi
   });
 }
 
+// Post to a channel via the bot token (used for later change alerts, when the
+// slash command's response_url has expired). Requires the bot to be in the channel.
+async function chatPost(channel: string, text: string): Promise<void> {
+  const token = process.env.SLACK_BOT_TOKEN;
+  if (!token) return;
+  await fetch("https://slack.com/api/chat.postMessage", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ channel, text }),
+  });
+}
+
 // ── account linking (reuses the shared linkCodes table) ──────────────────────
 export const linkSlack = internalMutation({
   args: { teamId: v.string(), slackUserId: v.string(), code: v.string() },
@@ -99,5 +111,14 @@ export const notifyResult = internalAction({
   handler: async (ctx, { sourceId, responseUrl }) => {
     const board = await ctx.runQuery(internal.views.boardInternal, { sourceId });
     if (board) await postToResponseUrl(responseUrl, `:white_check_mark: ${formatBoardSlack(board)}`);
+  },
+});
+
+// Change alert to the Slack channel the watch was started from.
+export const notifyChange = internalAction({
+  args: { channelId: v.string(), domain: v.string(), lens: v.string(), summary: v.string(), whyItMatters: v.optional(v.string()) },
+  handler: async (_ctx, a): Promise<void> => {
+    const text = `:warning: *Change on ${a.domain}* (${a.lens})\n${clip(a.summary, 300)}${a.whyItMatters ? `\n_Why it matters:_ ${clip(a.whyItMatters, 200)}` : ""}`;
+    await chatPost(a.channelId, text);
   },
 });

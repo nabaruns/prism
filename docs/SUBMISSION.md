@@ -26,7 +26,9 @@ Context.dev is Prism's crawl layer **and** its reasoning layer — we deliberate
 **Live demo:** https://collabute-hackathon-phi.vercel.app  (landing → "Launch app" → sign in at `/app`)
 - Deployed on **Vercel**, backed by a cloud **Convex** deployment (`prism-hackathon`).
 - **Login:** email + password via Convex Auth (create an account on the sign-in screen).
-- **Telegram:** message **@prism_web_bot** — it runs on a Convex HTTP-action webhook and DMs results + live change alerts back.
+- **Telegram:** message **@prism_web_bot** — a Convex HTTP-action webhook that DMs results + live change alerts back.
+- **Slack:** the `/prism` slash command (research/audit/watch/hunt/compare/ask) → a Convex HTTP-action endpoint; results post back via the command's `response_url`.
+- **Onboarding:** new accounts are auto-seeded with sample runs across the lenses.
 
 **Video:** <optional>
 
