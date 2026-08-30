@@ -29,10 +29,16 @@ export default defineSchema({
     ),
     error: v.optional(v.string()),
     telegramChatId: v.optional(v.number()), // chat that requested this source (push result back)
+    slackResponseUrl: v.optional(v.string()), // Slack slash-command response_url to reply to
     createdAt: v.number(),
   })
     .index("by_created", ["createdAt"])
     .index("by_user", ["userId", "createdAt"]),
+
+  // Links a Slack user (in a workspace) to a Prism user account.
+  slackLinks: defineTable({ teamId: v.string(), slackUserId: v.string(), userId: v.id("users") })
+    .index("by_slack_user", ["teamId", "slackUserId"])
+    .index("by_user", ["userId"]),
 
   // Links a Telegram chat to a Prism user account.
   telegramLinks: defineTable({ chatId: v.number(), userId: v.id("users") })

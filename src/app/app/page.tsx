@@ -65,14 +65,24 @@ function Workspace() {
 
   const sources = useQuery(api.sources.list) ?? [];
   const telegramConnected = useQuery(api.telegram.isConnected) ?? false;
+  const slackConnected = useQuery(api.slack.isConnected) ?? false;
   const add = useMutation(api.sources.add);
   const createLinkCode = useMutation(api.telegram.createLinkCode);
+  const [slackCode, setSlackCode] = useState<string | null>(null);
 
-  async function connectTelegram() {
+  function genCode() {
     const raw = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
-    const code = raw.replace(/-/g, "").slice(0, 12);
+    return raw.replace(/-/g, "").slice(0, 12);
+  }
+  async function connectTelegram() {
+    const code = genCode();
     await createLinkCode({ code });
     window.open(`https://t.me/prism_web_bot?start=${code}`, "_blank");
+  }
+  async function connectSlack() {
+    const code = genCode();
+    await createLinkCode({ code });
+    setSlackCode(code);
   }
 
   async function onAdd(e: React.FormEvent) {
@@ -100,15 +110,31 @@ function Workspace() {
             </div>
             {telegramConnected ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-sm text-emerald-200" title="Your Telegram is linked to @prism_web_bot">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Telegram connected
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Telegram
               </span>
             ) : (
               <button onClick={() => void connectTelegram()} className="rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-1.5 text-sm text-sky-200 hover:bg-sky-400/20" title="Link this account to @prism_web_bot">Connect Telegram</button>
+            )}
+            {slackConnected ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-sm text-emerald-200" title="Your Slack is linked">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Slack
+              </span>
+            ) : (
+              <button onClick={() => void connectSlack()} className="rounded-full border border-violet-400/30 bg-violet-400/10 px-3 py-1.5 text-sm text-violet-200 hover:bg-violet-400/20" title="Link your Slack via /prism connect">Connect Slack</button>
             )}
             <button onClick={() => void signOut()} className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-white/60 hover:bg-white/5">Sign out</button>
           </div>
         </div>
       </header>
+
+      {slackCode && (
+        <div className="border-b border-violet-400/20 bg-violet-400/[0.06] px-5 py-2.5 text-sm text-violet-100">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+            <span>In Slack, run <code className="rounded bg-black/30 px-1.5 py-0.5">/prism connect {slackCode}</code> to link this account.</span>
+            <button onClick={() => setSlackCode(null)} className="shrink-0 text-violet-300 hover:text-white">Dismiss</button>
+          </div>
+        </div>
+      )}
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-5 py-6 lg:grid-cols-[340px_1fr]">
         {/* left: input + sources */}

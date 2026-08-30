@@ -3,11 +3,25 @@ import { httpAction } from "./_generated/server";
 import { auth } from "./auth";
 import { internal } from "./_generated/api";
 import { tgSend, HELP, CONNECT_PROMPT, esc } from "./telegram";
+import { verifySlack } from "./slack";
 
 const http = httpRouter();
 auth.addHttpRoutes(http);
 
 const LENSES = new Set(["watch", "audit", "research", "compare", "hunt"]);
+
+function slackReply(text: string, inChannel = false) {
+  return new Response(JSON.stringify({ response_type: inChannel ? "in_channel" : "ephemeral", text }), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+const SLACK_HELP =
+  "*Prism* — analyze any URL from Slack.\n" +
+  "`/prism connect <code>` — link this Slack to your Prism account (get the code in the app)\n" +
+  "`/prism research stripe.com` · `/prism audit <url>` · `/prism watch <url>` · `/prism hunt <url>` · `/prism compare <url>`\n" +
+  "`/prism ask <query>` — query your knowledge graph\n" +
+  "`/prism <url>` — defaults to watch";
 
 // Telegram webhook — the deployed chat interface. Registered via setWebhook to
 // <CONVEX_SITE_URL>/telegram.
@@ -72,6 +86,64 @@ http.route({
       await tgSend(chatId, `⚠️ ${esc(String(e?.message ?? e))}`);
     }
     return new Response("ok");
+  }),
+});
+
+// Slack slash command (/prism). Replies immediately; lens results arrive later
+// via the command's response_url. No bot token or OAuth scopes required.
+http.route({
+  path: "/slack",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    const raw = await req.text();
+    const ok = await verifySlack(
+      req.headers.get("x-slack-request-timestamp") ?? "",
+      raw,
+      req.headers.get("x-slack-signature") ?? "",
+    );
+    if (!ok) return new Response("invalid signature", { status: 401 });
+
+    const form = new URLSearchParams(raw);
+    const teamId = form.get("team_id") ?? "";
+    const slackUserId = form.get("user_id") ?? "";
+    const responseUrl = form.get("response_url") ?? "";
+    const text = (form.get("text") ?? "").trim();
+    const [cmdRaw, ...rest] = text.split(/\s+/);
+    const cmd = cmdRaw.toLowerCase();
+    const arg = rest.join(" ").trim();
+
+    try {
+      if (!text || cmd === "help") return slackReply(SLACK_HELP);
+
+      if (cmd === "connect") {
+        if (!arg) return slackReply("Get a code from Prism → *Connect Slack*, then run `/prism connect <code>`.");
+        const linked = await ctx.runMutation(internal.slack.linkSlack, { teamId, slackUserId, code: arg });
+        return slackReply(linked ? ":white_check_mark: Connected to your Prism account. Try `/prism research stripe.com`." : "That code is invalid or expired. Generate a new one in the app.");
+      }
+
+      const userId = await ctx.runQuery(internal.slack.resolveSlackUser, { teamId, slackUserId });
+      if (!userId) return slackReply("This Slack isn't linked yet. Open Prism → *Connect Slack* → run `/prism connect <code>`.");
+
+      if (cmd === "ask") {
+        if (!arg) return slackReply("Ask what? e.g. `/prism ask pricing`");
+        const res = await ctx.runQuery(internal.graph.askForUser, { userId, q: arg });
+        const ents = (res.entities || []).slice(0, 8).map((e: any) => `${e.type}: ${e.name}`).join("\n");
+        return slackReply(`:brain: ${res.answer}${ents ? `\n\n${ents}` : ""}`, true);
+      }
+
+      let lens = "watch";
+      let url = text;
+      if (LENSES.has(cmd)) {
+        if (!arg) return slackReply(`Give me a URL. e.g. \`/prism ${cmd} example.com\``);
+        lens = cmd; url = arg;
+      } else if (!/^https?:\/\//i.test(text) && !/^[\w-]+(\.[\w-]+)+/.test(text)) {
+        return slackReply("Didn't get that — try `/prism help`");
+      }
+      await ctx.runMutation(internal.sources.addForUserSlack, { userId, url, lens: lens as any, responseUrl });
+      return slackReply(`:mag: Running *${lens}* on *${url}*… result posts here in a moment.`, true);
+    } catch (e: any) {
+      return slackReply(`:warning: ${String(e?.message ?? e)}`);
+    }
   }),
 });
 
