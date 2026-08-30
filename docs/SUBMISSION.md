@@ -21,7 +21,7 @@ Context.dev is Prism's crawl layer **and** its reasoning layer — we deliberate
 
 ---
 
-**Repository:** <add repo link>
+**Repository:** https://github.com/nabaruns/prism  (make it public before submitting)
 
 **Live demo:** https://collabute-hackathon-phi.vercel.app  (landing → "Launch app" → sign in at `/app`)
 - Deployed on **Vercel**, backed by a cloud **Convex** deployment (`prism-hackathon`).
