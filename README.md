@@ -2,6 +2,8 @@
 
 **One URL. Five lenses on the web.**
 
+▶️ **[Watch the 2-min demo](https://youtu.be/5XNut1SKtIw)** · 🌐 **Live app:** https://collabute-hackathon-phi.vercel.app
+
 Prism is an AI web-intelligence agent. Point it at any URL and it can **Watch** (track changes), **Audit** (find stale/broken/contradictory content), **Research** (company memo), **Compare** (competitor snapshot), and **Hunt** (pull opportunities from a listing). Everything it finds folds into one **knowledge graph** you can **Ask** (Graph RAG).
 
 Built at the Collabute × TheBlock hackathon (Dubai, 30 Aug 2026) on three partner technologies:

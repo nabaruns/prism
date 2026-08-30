@@ -30,6 +30,6 @@ Context.dev is Prism's crawl layer **and** its reasoning layer — we deliberate
 - **Slack:** the `/prism` slash command (research/audit/watch/hunt/compare/ask) → a Convex HTTP-action endpoint; results post back via the command's `response_url`.
 - **Onboarding:** new accounts are auto-seeded with sample runs across the lenses.
 
-**Video:** <optional>
+**Video:** https://youtu.be/5XNut1SKtIw
 
 **Disclosure of pre-existing assets:** None beyond standard open-source scaffolding — Next.js (create-next-app), Tailwind, and the Convex/Context.dev SDKs. All Prism-specific code (schema, lens engine, graph RAG, UI, Telegram bot) was written during the event.
