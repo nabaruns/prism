@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, internalMutation, internalQuery, internalAction } from "./_generated/server";
+import { query, mutation, internalMutation, internalQuery, internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Id } from "./_generated/dataModel";
@@ -76,6 +76,17 @@ export const createLinkCode = mutation({
     if (!userId) throw new Error("Sign in first.");
     await ctx.db.insert("linkCodes", { code, userId, createdAt: Date.now() });
     return code;
+  },
+});
+
+// App: is the current user's Telegram linked? (live — flips when /start completes)
+export const isConnected = query({
+  args: {},
+  handler: async (ctx): Promise<boolean> => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return false;
+    const link = await ctx.db.query("telegramLinks").withIndex("by_user", (q) => q.eq("userId", userId)).first();
+    return !!link;
   },
 });
 

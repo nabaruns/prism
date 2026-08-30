@@ -64,6 +64,7 @@ function Workspace() {
   }, [tab, selected]);
 
   const sources = useQuery(api.sources.list) ?? [];
+  const telegramConnected = useQuery(api.telegram.isConnected) ?? false;
   const add = useMutation(api.sources.add);
   const createLinkCode = useMutation(api.telegram.createLinkCode);
 
@@ -97,7 +98,13 @@ function Workspace() {
               <button onClick={() => setTab("board")} className={`rounded-full px-4 py-1 ${tab === "board" ? "bg-white text-black" : "text-white/60"}`}>Board</button>
               <button onClick={() => setTab("ask")} className={`rounded-full px-4 py-1 ${tab === "ask" ? "bg-white text-black" : "text-white/60"}`}>Ask</button>
             </div>
-            <button onClick={() => void connectTelegram()} className="rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-1.5 text-sm text-sky-200 hover:bg-sky-400/20" title="Link this account to @prism_web_bot">Connect Telegram</button>
+            {telegramConnected ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-sm text-emerald-200" title="Your Telegram is linked to @prism_web_bot">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Telegram connected
+              </span>
+            ) : (
+              <button onClick={() => void connectTelegram()} className="rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-1.5 text-sm text-sky-200 hover:bg-sky-400/20" title="Link this account to @prism_web_bot">Connect Telegram</button>
+            )}
             <button onClick={() => void signOut()} className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-white/60 hover:bg-white/5">Sign out</button>
           </div>
         </div>

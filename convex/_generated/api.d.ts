@@ -15,6 +15,7 @@ import type * as http from "../http.js";
 import type * as lib_context from "../lib/context.js";
 import type * as lib_lensSchemas from "../lib/lensSchemas.js";
 import type * as monitor from "../monitor.js";
+import type * as seed from "../seed.js";
 import type * as sources from "../sources.js";
 import type * as telegram from "../telegram.js";
 import type * as views from "../views.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   "lib/context": typeof lib_context;
   "lib/lensSchemas": typeof lib_lensSchemas;
   monitor: typeof monitor;
+  seed: typeof seed;
   sources: typeof sources;
   telegram: typeof telegram;
   views: typeof views;

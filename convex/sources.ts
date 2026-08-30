@@ -40,7 +40,7 @@ function normalizeUrl(url: string): string {
   return /^https?:\/\//i.test(u) ? u : `https://${u}`;
 }
 
-async function insertSource(
+export async function insertSource(
   ctx: any,
   userId: Id<"users">,
   url: string,
