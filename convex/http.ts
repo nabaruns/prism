@@ -112,6 +112,7 @@ http.route({
     const [cmdRaw, ...rest] = text.split(/\s+/);
     const cmd = cmdRaw.toLowerCase();
     const arg = rest.join(" ").trim();
+    console.log(`[slack] cmd=${cmd} arg=${arg} user=${slackUserId} team=${teamId}`);
 
     try {
       if (!text || cmd === "help") return slackReply(SLACK_HELP);
@@ -140,7 +141,8 @@ http.route({
       } else if (!/^https?:\/\//i.test(text) && !/^[\w-]+(\.[\w-]+)+/.test(text)) {
         return slackReply("Didn't get that — try `/prism help`");
       }
-      await ctx.runMutation(internal.sources.addForUserSlack, { userId, url, lens: lens as any, responseUrl, channelId });
+      const sid = await ctx.runMutation(internal.sources.addForUserSlack, { userId, url, lens: lens as any, responseUrl, channelId });
+      console.log(`[slack] created source ${sid} lens=${lens} url=${url}`);
       return slackReply(`:mag: Running *${lens}* on *${url}*… result posts here in a moment.`, true);
     } catch (e: any) {
       return slackReply(`:warning: ${String(e?.message ?? e)}`);
