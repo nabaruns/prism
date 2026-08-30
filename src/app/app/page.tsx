@@ -85,6 +85,36 @@ function Workspace() {
     setSlackCode(code);
   }
 
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+  const [ocrBusy, setOcrBusy] = useState(false);
+  const [ocrText, setOcrText] = useState<string | null>(null);
+
+  async function onImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setOcrBusy(true);
+    setOcrText(null);
+    try {
+      // 1) store the image in Convex file storage
+      const uploadUrl = await generateUploadUrl();
+      await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+      // 2) OCR it in the browser (free, no server)
+      const { createWorker } = await import("tesseract.js");
+      const worker = await createWorker("eng");
+      const { data } = await worker.recognize(file);
+      await worker.terminate();
+      const text = data.text.trim();
+      setOcrText(text || "(no text found)");
+      const m = text.match(/https?:\/\/[^\s]+/i) || text.match(/[\w-]+\.(?:com|dev|ai|io|org|net|co|app)(?:\/[^\s]*)?/i);
+      if (m) setUrl(m[0].replace(/[.,)]+$/, ""));
+    } catch {
+      setOcrText("Couldn't read that image — try a clearer one.");
+    } finally {
+      setOcrBusy(false);
+      e.target.value = "";
+    }
+  }
+
   async function onAdd(e: React.FormEvent) {
     e.preventDefault();
     if (!url.trim()) return;
@@ -163,6 +193,15 @@ function Workspace() {
             <button className="w-full rounded-lg bg-white py-2 text-sm font-medium text-black transition hover:bg-white/90">
               Run {LENSES.find((l) => l.key === lens)!.label} →
             </button>
+            <label className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-white/15 py-2 text-xs ${ocrBusy ? "text-white/40" : "text-white/50 hover:border-white/30"}`}>
+              {ocrBusy ? "Reading image…" : "📷 OCR an image → URL"}
+              <input type="file" accept="image/*" className="hidden" onChange={onImage} disabled={ocrBusy} />
+            </label>
+            {ocrText && (
+              <p className="max-h-20 overflow-y-auto rounded bg-black/30 p-2 text-[11px] leading-relaxed text-white/50">
+                <span className="text-white/40">Stored in Convex · OCR:</span> {ocrText.slice(0, 240)}
+              </p>
+            )}
           </form>
 
           <div className="space-y-1.5">
