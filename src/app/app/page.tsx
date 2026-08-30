@@ -179,8 +179,8 @@ function Workspace() {
       )}
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-5 py-6 lg:grid-cols-[340px_1fr]">
-        {/* left: input + sources */}
-        <aside className="space-y-4">
+        {/* left: input + sources (sticky on desktop) */}
+        <aside className="space-y-4 lg:sticky lg:top-[68px] lg:self-start lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto lg:pr-1">
           <form onSubmit={onAdd} className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <input
               value={url}
