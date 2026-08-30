@@ -221,10 +221,15 @@ function Workspace() {
               <button
                 key={s._id}
                 onClick={() => { setSelected(s._id); setTab("board"); }}
-                className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm ${selected === s._id ? "border-white/30 bg-white/[0.06]" : "border-white/5 hover:bg-white/[0.03]"}`}
+                className={`flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left ${selected === s._id ? "border-white/30 bg-white/[0.06]" : "border-white/5 hover:bg-white/[0.03]"}`}
               >
-                <span className="text-xs">{LENSES.find((l) => l.key === s.lens)?.glyph}</span>
-                <span className="flex-1 truncate">{s.domain}</span>
+                <span className="text-sm">{LENSES.find((l) => l.key === s.lens)?.glyph}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm">{s.domain}</span>
+                  <span className="block text-[10px] font-medium uppercase tracking-wide text-white/40">
+                    {LENSES.find((l) => l.key === s.lens)?.label ?? s.lens}
+                  </span>
+                </span>
                 <StatusDot status={s.status} />
               </button>
             ))}
