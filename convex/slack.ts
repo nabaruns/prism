@@ -105,6 +105,21 @@ export const isConnected = query({
   },
 });
 
+// Keep the HTTP runtime warm (cron) so the first Slack command after idle
+// beats Slack's 3-second timeout.
+export const warm = internalAction({
+  args: {},
+  handler: async (): Promise<void> => {
+    const site = process.env.CONVEX_SITE_URL;
+    if (!site) return;
+    try {
+      await fetch(`${site}/ping`);
+    } catch {
+      /* best effort */
+    }
+  },
+});
+
 // ── deliver a finished result to the slash command's response_url ────────────
 export const notifyResult = internalAction({
   args: { sourceId: v.id("sources"), responseUrl: v.string() },

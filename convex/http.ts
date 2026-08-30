@@ -96,13 +96,11 @@ http.route({
   method: "POST",
   handler: httpAction(async (ctx, req) => {
     const raw = await req.text();
-    const hasSig = !!req.headers.get("x-slack-signature");
     const ok = await verifySlack(
       req.headers.get("x-slack-request-timestamp") ?? "",
       raw,
       req.headers.get("x-slack-signature") ?? "",
     );
-    console.log(`[slack] request received; hasSignature=${hasSig} verified=${ok}`);
     if (!ok) return new Response("invalid signature", { status: 401 });
 
     const form = new URLSearchParams(raw);
@@ -148,6 +146,14 @@ http.route({
       return slackReply(`:warning: ${String(e?.message ?? e)}`);
     }
   }),
+});
+
+// Lightweight endpoint pinged by a cron to keep the HTTP runtime warm, so the
+// first Slack slash command after idle replies within Slack's 3s limit.
+http.route({
+  path: "/ping",
+  method: "GET",
+  handler: httpAction(async () => new Response("ok")),
 });
 
 export default http;

@@ -7,4 +7,7 @@ const crons = cronJobs();
 // Interval kept modest to conserve Context.dev credits; tighten for a live demo.
 crons.interval("monitor watched sources", { minutes: 30 }, internal.monitor.sweep, {});
 
+// Keep the Slack/Telegram HTTP runtime warm so slash commands beat Slack's 3s limit.
+crons.interval("keep http warm", { minutes: 4 }, internal.slack.warm, {});
+
 export default crons;
