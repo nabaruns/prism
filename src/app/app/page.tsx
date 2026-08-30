@@ -63,7 +63,19 @@ function Workspace() {
     window.history.replaceState(null, "", `/app?${p.toString()}`);
   }, [tab, selected]);
 
-  const sources = useQuery(api.sources.list) ?? [];
+  const sourcesRaw = useQuery(api.sources.list);
+  const sources = sourcesRaw ?? [];
+  const ensureSamples = useMutation(api.seed.ensureSamples);
+  const [seedTried, setSeedTried] = useState(false);
+
+  // First-run onboarding: if the dashboard is empty, seed sample runs (idempotent server-side).
+  useEffect(() => {
+    if (!seedTried && sourcesRaw !== undefined && sourcesRaw.length === 0) {
+      setSeedTried(true);
+      void ensureSamples();
+    }
+  }, [sourcesRaw, seedTried, ensureSamples]);
+
   const telegramConnected = useQuery(api.telegram.isConnected) ?? false;
   const slackConnected = useQuery(api.slack.isConnected) ?? false;
   const add = useMutation(api.sources.add);
