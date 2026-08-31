@@ -1,13 +1,8 @@
 import { cronJobs } from "convex/server";
-import { internal } from "./_generated/api";
 
+// All recurring tasks disabled. (Previously: a 30-min monitor sweep that
+// re-crawled watched sources, and a 4-min keep-warm ping.) Re-enable by
+// registering crons here again — see git history.
 const crons = cronJobs();
-
-// Autonomously re-crawl watched sources so changes surface without anyone clicking.
-// Interval kept modest to conserve Context.dev credits; tighten for a live demo.
-crons.interval("monitor watched sources", { minutes: 30 }, internal.monitor.sweep, {});
-
-// Keep the Slack/Telegram HTTP runtime warm so slash commands beat Slack's 3s limit.
-crons.interval("keep http warm", { minutes: 4 }, internal.slack.warm, {});
 
 export default crons;
